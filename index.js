@@ -18,111 +18,101 @@ class Node {
 //There are 2 types of nodes:
 //Client Node
 class ClientNode extends Node {
-    constructor(data, timeOfArrival, burstNumber) {
+    constructor(data, burst) {  // arrivalTime parameter?
         super(data);
-        this.burstNumber = burstNumber; //Contains the number of transactions the client needs the cashier to process
-        this.timeOfArrival = timeOfArrival; // Contains the creation time of a process
+        this.burst = burst; //Contains the number of transactions the client needs the cashier to process (previously tranNum)
         this.color = getRandomColor();
-        let startTime;
-        let finalTime; //startTime + burstNumber
-        let returnTime; // finalTime - timeOfArrival
-        let waitTime; // returnTime -  burstNumber
+        // Data needed to populate the table
+        this.arrivalTime = arrivalTime; // Contains the creation time of a process
+        this.startTime;
+        this.finalTime; //startTime + burstNumber
+        this.returnTime; // finalTime - timeOfArrival
+        this.waitTime; // returnTime -  burstNumber
     }
-    getTimeOfArrival() {
-        return this.timeOfArrival;
+    getArrivalTime() {
+        return this.arrivalTime;
     }
-
-    setTimeOfArrival(timeOfArrival) {
-        this.timeOfArrival = timeOfArrival;
+    setArrivalTime(arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }    
-
     getStartTime() {
         return this.startTime;
     }
-
-    setStartTime(burstNumber) {
-        this.startTime = this.finalTime - burstNumber;
+    setStartTime(burst) {
+        this.startTime = this.finalTime - burst; // parameter?
     } 
-
     getBurstNumber() {
-        return this.burstNumber;
+        return this.burst;
     }
-
-    setBurstNumber(burstNumber) {
-        this.burstNumber = burstNumber;
+    setBurstNumber(burst) { 
+        this.burst = burst; // parameter?
     }
-    
     getFinalTime() {
         return this.finalTime;
     }
-
-    setFinalTime(burstNumber) {
-        this.finalTime = burstNumber;
+    setFinalTime(burst) {
+        this.finalTime = burst;
     } 
-    
     getReturnTime() {
         return this.returnTime;
     }
-
     setReturnTime(finalTime, startTime) {
         this.returnTime = finalTime - startTime;
     }    
-    
     getWaitTime() {
         return this.waitTime;
     }
-
     setWaitTime(returnTime, burst) {
         this.waitTime = returnTime - burst;
     }
-
     //Removes from the number of transactions the client needs the cashier to process
     removeTransactions(num) {
         if(num <= 0) return;
-        if(this.burstNumber <= num) {
-            this.burstNumber = 0;
+        if(this.burst <= num) {
+            this.burst = 0;
         } else {
-            this.burstNumber -= num;
+            this.burst -= num;
         }
     }
 }
 //Cashier Node
 class CashierNode extends Node {
-    constructor(data, maxTansNumber) {
+    constructor(data) { /*(data, maxBurst)*/
         super(data);
-        this.maxburstNumberber = maxTansNumber; //The maximum number of transactions that can process per client each time
+        //this.maxBurst = maxBurst; //The maximum number of transactions that can process per client each time
     }
-    
-    getMaxburstNumberb() {
-        return this.maxburstNumberber;
-    }
+    // getMaxBurst() {
+    //      return this.maxBurst;
+    // }
 }
+
+//**ANGEL DESORDENADOOOO!*/
+//
+//
 // Global variable to random probability
-let globalRandom = null;
-
-
+let globalRandom = updateGlobalRandom();
 // Function to update the global random variable
 function updateGlobalRandom() {
     globalRandom = getRandomInt(1, 100);
 }
-
-updateGlobalRandom();
-// CircularSinglyLinkedList class
-
 let processTransactionscounter = (globalRandom % 8 + 1) - 2; //in conjunction with createRandomClientList (change both)  returns the initial runtime value
 let burstSum = 0; //Used to calculate the start and final time
+//
+//
+//
+//**ANGEL DESORDENADOOOO!*/
 
+// CircularSinglyLinkedList class
 class CircularSinglyLinkedList {
     constructor() {
-        this.head = new CashierNode("Cashier", 20); //Max number of transactions per client
+        this.head = new CashierNode("Processor");
         this.tail = null;
     }
     // Method to check if the queue is empty (No clients)
     isEmpty() {
         return this.tail === null;
     }
-
-    // Method to skips a process node (use to avoid elimination)
+    // Method to skip a process node (use to avoid elimination)
     defineCurrent(){
         let currentNode = this.head.next;
         if(currentNode.getBurstNumber() > 0){
@@ -138,44 +128,40 @@ class CircularSinglyLinkedList {
             return currentNode;
         }
     }
-
     processTransactions() {
         //let client = this.head.next; 
         let client = this.defineCurrent(); //To avoid the node elimination
         if (client == this.head) {
             console.log("Queue is empty!");
         } else {
-            let burstNumberber = client.getBurstNumber();
+            let burst = client.getBurstNumber();
             //let actualClient = client.getData();
-            let maxburstNumberber = this.head.getMaxburstNumberb();
-            let burstSum = this.burstSum(burstNumberber);
+            let maxBurst = this.head.getMaxBurst();
+            let burstSum = this.burstSum(burst);
             client.setFinalTime(burstSum);
-            client.setStartTime(burstNumberber);
+            client.setStartTime(burst);
             client.setReturnTime(client.getFinalTime(), client.getTimeOfArrival());
             client.setWaitTime(client.getReturnTime(), client.getBurstNumber());
             processTransactionscounter++;
             console.log("current time: " + processTransactionscounter); 
-            if (burstNumberber > maxburstNumberber) {
-                client.removeTransactions(maxburstNumberber);
-                burstNumberber -= maxburstNumberber;
+            if (burst > maxBurst) {
+                client.removeTransactions(maxBurst);
+                burst -= maxBurst;
                 //this.moveFirstToEnd();
             } else {
-                client.removeTransactions(burstNumberber);
+                client.removeTransactions(burst);
                 //this.deleteAtStart();
                 this.defineCurrent();
             }
         }
     }
-
     getProcessTransactionsCounter() {
         return processTransactionscounter;
     }
-
     burstSum(burstNumber){
         burstSum = burstNumber + burstSum;
         return burstSum;
     }
-
     insertAtEnd(data, arrivalTime, burstNumber) {
         const newNode = new ClientNode(data, arrivalTime, burstNumber);
         if (this.isEmpty()) {
@@ -192,7 +178,6 @@ class CircularSinglyLinkedList {
             newNode.setNext(this.head);
         }
     }
-
     deleteAtStart() {
         if (this.isEmpty()) {
             console.log("List is empty");
@@ -206,9 +191,6 @@ class CircularSinglyLinkedList {
         firstNode.setNext(null);
         this.head.setNext(nextNode);
     }
-
-
-
     moveFirstToEnd() {
         if (this.isEmpty()) {
             console.log("List is empty");
@@ -238,7 +220,7 @@ class CircularSinglyLinkedList {
         let current = this.head.next;
         do {
             if (current instanceof ClientNode) {
-                console.log(current.getData() + ": " + current.getTimeOfArrival() + ": "  
+                console.log(current.getData() + ": " + current.getArrivalTime() + ": "  
                 + current.getBurstNumber() + "; " + current.getStartTime() + "; " 
                 + current.getFinalTime() + "; " + current.getReturnTime() + "; " + current.getWaitTime());
                 current = current.next;
@@ -527,7 +509,7 @@ function printOnScreen() {
     let past = csl.tail;
     let current = csl.head.next
     let burstNumberber = current.getBurstNumber();
-    let maxburstNumberber = csl.head.getMaxburstNumberb();
+    let maxburstNumberber = csl.head.getMaxBurst();
     let showText;
    
    //Print on screen the actual client
@@ -637,7 +619,7 @@ function updateTable(){
             tableRowProcess.innerHTML = current.getData();
             tableRowProcess.style.backgroundColor = current.color;
 
-            tableRowArrivalTime.innerHTML = current.getTimeOfArrival();
+            tableRowArrivalTime.innerHTML = current.getArrivalTime();
             tableRowArrivalTime.style.backgroundColor = current.color;
 
             tableRowBurst.innerHTML = current.getBurstNumber();
