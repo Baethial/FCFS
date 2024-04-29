@@ -323,7 +323,7 @@ function updateAnimation() {
     // Add the cashier box
     const cashierBox = document.createElement("div");
     cashierBox.classList.add("box", "cashier-box");
-    cashierBox.textContent = "Gol D. Roger";
+    cashierBox.textContent = "Processor";
     animationContainer.appendChild(cashierBox);
     // Display client boxes
     let current = csl.head.next;
@@ -354,6 +354,7 @@ function processTransactionsWithDelay() {
         csl.processTransactions();
         updateAnimation();
         displayTable();
+        populateGanttChart();
         // Recursively call the function after 2 seconds if the queue is not empty
         if (!csl.isEmpty()) {
             processTransactionsWithDelay();
@@ -495,15 +496,49 @@ function displayTable() {
     tableContainer.appendChild(table);
 }
 
-// Call the displayTable function to initially populate the table
-displayTable();
+// Function to populate the Gantt chart with tasks for each client
+function populateGanttChart() {
+    const gantt = document.querySelector('.gantt');
+    dispatchedClientsInfo.forEach((client, index) => {
+        const task = document.createElement('div');
+        task.classList.add('task');
+        task.style.top = `${index * 30}px`; // Adjust vertical position for each client row
 
+        const waitingLine = createLine(client.arrivalTime, client.startTime, 'waiting-line');
+        const burstLine = createLine(client.startTime, client.finalTime, 'burst-line');
 
+        task.appendChild(waitingLine);
+        task.appendChild(burstLine);
 
+        gantt.appendChild(task);
+    });
+}
 
+// Function to create a horizontal line for the Gantt chart
+function createLine(start, end, className) {
+    const line = document.createElement('div');
+    line.classList.add('line', className);
+    line.style.left = `${start * 10}px`; // Set left position based on start time
+    line.style.width = `${(end - start) * 10}px`; // Set width based on duration
+    return line;
+}
 
+// Function to populate the baseline with time markers
+function populateBaseline() {
+    const baseline = document.querySelector('.baseline');
+    for (let i = 0; i <= 150; i += 10) {
+        const marker = document.createElement('div');
+        marker.classList.add('time-marker');
+        marker.textContent = i;
+        marker.style.left = `${i * 10}px`;
+        baseline.appendChild(marker);
+    }
+}
+  
 
 //***Start of Example Execution***
+
+
 updateGlobalRandom();
 const intervalID = setInterval(updateGlobalRandom, 2500);
 // Create a CircularSinglyLinkedList instance
@@ -512,6 +547,10 @@ const csl = new CircularSinglyLinkedList();
 createRandomClientList(csl);
 //Initial Animation Update
 updateAnimation();
+//Call the displayTable function to initially populate the table
+displayTable();
+//Populate Base Line
+populateBaseline() 
 // Execution
 executeParallelOperations();
 //***End of Example Execution***
